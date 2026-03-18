@@ -125,7 +125,7 @@ def get_history(current_user):
 
 @app.route("/history/<int:history_id>", methods=["DELETE"])
 @token_required
-def delete_history_item(current_user, history_id):
+def delete_history_item(history_id, current_user):
     record = History.query.filter_by(id=history_id, user_id=current_user.id).first()
     if not record:
         return jsonify({"message": "Record not found"}), 404
@@ -145,7 +145,23 @@ def handle_exception(e):
     app.logger.error(f"UNCAUGHT ERROR: {e}")
     return jsonify({"message": f"Unhandled error: {str(e)}"}), 500
 
+@app.route("/delete_account/<int:user_id>", methods=["DELETE"])
+@token_required
+def delete_user(user_id, current_user):
+    # Authorization check: ensure user can only delete their own account
+    if current_user.id != user_id:
+        return jsonify({"message": "Unauthorized"}), 403
 
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    # Delete related records first to avoid foreign key constraint errors
+    History.query.filter_by(user_id=user_id).delete()
+
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"message": "Deleted successfully"}), 200
 
 @app.route("/uploads/<filename>", methods=["GET"])
 def get_image(filename):
