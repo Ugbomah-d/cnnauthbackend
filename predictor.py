@@ -31,7 +31,7 @@ class RiceFeatureExtractor(nn.Module):
 
 
 def load_model():
-    base = os.path.join(os.path.dirname(__file__), "model")
+    base = os.path.join(os.path.dirname(__file__), "Model")
 
     with open(os.path.join(base, "class_names.json")) as f:
         class_names = json.load(f)
